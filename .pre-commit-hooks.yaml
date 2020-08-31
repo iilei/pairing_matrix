@@ -1,0 +1,7 @@
+-   id: pairing_matrix
+    name: Pairing Matrix
+    description: Generates a Pairing Matrix
+    entry: pairing-matrix
+    language: python
+    always_run: true
+    pass_filenames: false

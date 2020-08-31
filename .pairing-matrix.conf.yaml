@@ -1,0 +1,3 @@
+pattern: /(?:(?<=Co-authored-by:\s)[^<\n]+(?= ))|(?:(?<=Author:\s)[^<\n]+(?= ))/
+repositories:
+  - url: https://github.com/iilei/pairing_matrix.git
