@@ -1,3 +1,15 @@
-pattern: /(?:(?<=Co-authored-by:\s)[^<\n]+(?= ))|(?:(?<=Author:\s)[^<\n]+(?= ))/
+---
 repositories:
-  - url: https://github.com/iilei/pairing_matrix.git
+  # repository options as documented in https://pygithub.readthedocs.io/en/latest/github.html
+  - base_url: https://api.github.com
+    # login_or_token: "{{ .Env.ACCESS_TOKEN_FOO }}"
+#    password
+#    jwt
+#    base_url
+#    timeout
+#    client_id
+#    client_secret
+#    user_agent
+#    per_page
+#    verify
+#    retry

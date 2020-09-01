@@ -31,9 +31,13 @@ python = "~=3.6"
 PyGithub = "^1.53"
 tabulate = "^0.8.7"
 confuse = "^1.3.0"
-config42 = "^0.4.4"
-
-
+python-dotenv = "^0.14.0"
+pyyaml = "^5.3.1"
+asyncio = "^3.4.3"
+config42 = {git = "https://github.com/yurilaaziz/config42.git", rev = "116c4bca91f36858f8e70fdf5f5151bba8188b36"}
+python-gitlab = "^2.5.0"
+python-datemath = "^1.5.2"
+pytz = "^2020.1"
 
 
 [tool.poetry.dev-dependencies]

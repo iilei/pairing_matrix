@@ -31,3 +31,33 @@ poetry run pytest
 
 This repository follows the [Conventional Commits](https://www.conventionalcommits.org/)
 style.
+
+## WIP Notes
+
+```bash
+# if the env file is remote, use
+# gomplate -d my_remote_env=http://xyz.org/.test.env?type=application/x-env --file ./.test.pairing-matrix.conf.yaml
+# and in the config: {{ (ds "my_remote_env").MY_PUBLIC_TEST_VARIABLE }}
+
+# locally, use godotenv
+# godotenv -f .test.env gomplate --file ./.test.pairing-matrix.conf.yaml
+
+
+pairing_matrix --config-path <(godotenv -f .test.env gomplate --file ./.test.pairing-matrix.conf.yaml) \
+               --config-format yaml
+
+
+
+```
+
+## WIP Notes
+
+```bash
+# if the env file is remote, use
+# gomplate -d my_remote_env=http://xyz.org/.test.env?type=application/x-env --file ./.test.pairing-matrix.conf.yaml
+# and in the config: {{ (ds "my_remote_env").MY_PUBLIC_TEST_VARIABLE }}
+
+# locally, use godotenv
+godotenv -f .test.env gomplate --file ./.test.pairing-matrix.conf.yaml
+
+```

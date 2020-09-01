@@ -1,4 +1,5 @@
--   id: pairing_matrix
+---
+  - id: pairing_matrix
     name: Pairing Matrix
     description: Generates a Pairing Matrix
     entry: pairing-matrix
