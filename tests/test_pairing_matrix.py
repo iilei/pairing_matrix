@@ -16,7 +16,7 @@ def test_pairing_matrix(monkeypatch):
                 '--config-format',
                 'yaml',
                 '--timespan',
-                'now-14d/d - now+1d/d Europe/Berlin',
+                'now-1d/d - now Europe/Berlin (now: 2020-10-05)',
             ]
         )
         == 0

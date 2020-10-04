@@ -7,10 +7,13 @@ DEFAULT_OPTS = {
     # pairing_matrix --config-path <( \
     #                       godotenv -f .env \
     #                       gomplate --file ./.test.pairing-matrix.conf.yaml
-    #                ) --config-format yaml
+    #                ) --config-format yaml \
+    #                --timespan
+    #
     'config_format': 'yaml',
-    # `<from> - <to> <TZ>` -- see https://github.com/nickmaccarthy/python-datemath
-    'timespan': 'now-14d/d - now+1d/d UTC',
+    # `<from> - <to> <TZ?> <now?>`
+    # -- see https://github.com/nickmaccarthy/python-datemath
+    'timespan': 'now-14d/d - now UTC',
 }
 DEFAULT_CONFIG = {
     'timespan': DEFAULT_OPTS.get('timespan'),

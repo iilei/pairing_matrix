@@ -17,18 +17,28 @@ import re
 from .defaults import DEFAULT_CONFIG, DEFAULT_OPTS
 
 
+APIS_AVAILABLE = ['github', 'gitlab']
+NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
+
+
 def get_time_range(timespan):
     (tz,) = list(
         filter(lambda _tz: re.match(fr'.*\b{_tz}\b.*', timespan), all_timezones)
     ) or ['UTC']
-    timespan = re.sub(fr'[ ;/\-\s,]*{tz}[ ;/\-\s,]*', '', timespan)
+    timespan = re.sub(fr'[ ;/\-\s,]*{tz}[ ;/\-\s,]*', ' ', timespan)
+    now = re.search(NOW_REGEX, timespan)
+    timespan = re.sub(NOW_REGEX, '', timespan).strip()
+    src_timestamp = None
+    if now and now[1]:
+        src_timestamp = datemath(now[1])
+
     _time_a, _time_b = re.split(re.compile(r'\s+-\s+'), timespan)
-    from_to = [datemath(_time_a, tz=tz), datemath(_time_b, tz=tz)]
+    from_to = [
+        datemath(_time_a.strip(), tz=tz, now=src_timestamp),
+        datemath(_time_b.strip(), tz=tz, now=src_timestamp),
+    ]
     from_to.sort()
     return from_to
-
-
-APIS_AVAILABLE = ['github', 'gitlab']
 
 
 def get_or_guess_api(config):
@@ -90,7 +100,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         default=None,
         help='\n'.join(
             [
-                'Timespan `<from> - <to> <TZ>`',
+                'Timespan `<from> - <to> <TZ?> <now?>`',
                 'See https://github.com/nickmaccarthy/python-datemath.'
                 'If it contains a timezone, that will be taken into account, too.',
             ]
