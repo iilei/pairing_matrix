@@ -28,6 +28,48 @@ def get_time_range(timespan):
     return from_to
 
 
+APIS_AVAILABLE = ['github', 'gitlab']
+
+
+def get_or_guess_api(config):
+    api = config.get('api', None)
+    base_url = config.get('options', {}).get('base_url', '')
+    if api:
+        return api
+    apis_by_base_url = list(filter(lambda _api: _api in base_url, APIS_AVAILABLE)) or [
+        None
+    ]
+
+    if len(apis_by_base_url) == 1:
+        return apis_by_base_url[0]
+    raise AttributeError(f'Insufficient options for ${base_url}')
+
+
+async def get_client(config):
+    api = get_or_guess_api(config)
+    # let's be defensive and not mutate the original config;
+    options = config.get('options')
+
+    if api == 'github':
+        await get_github_history(options)
+    else:
+        await get_gitlab_history(options)
+
+
+async def get_github_history(config):
+    g = Github(**config)
+    print(g)
+
+
+async def get_gitlab_history(config):
+    g = Gitlab(**config)
+    print(g)
+
+
+async def gather_commits(clients, from_time, to_time):
+    await asyncio.gather(*map(get_client, clients))
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -72,30 +114,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     timespan_string = config.as_dict().get('timespan', DEFAULT_OPTS.get('timespan'))
     timespan = get_time_range(timespan_string)
-
-    print(*timespan)
-
-    async def get_github_history(repo):
-        g = Github(**repo)
-        print(g)
-
-    async def get_gitlab_history(repo):
-        g = Gitlab(**repo)
-        print(g)
-
-    async def get_history():
-        _apis = config.as_dict().get('apis', {})
-        github_repos = _apis.get('github', [])
-        gitlab_repos = _apis.get('gitlab', [])
-
-        await asyncio.gather(
-            *[
-                *map(get_github_history, github_repos),
-                *map(get_gitlab_history, gitlab_repos),
-            ]
-        )
-
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(get_history())
+    clients = config.as_dict().get('clients')
+    loop.run_until_complete(gather_commits(clients, *timespan))
 
     return 0

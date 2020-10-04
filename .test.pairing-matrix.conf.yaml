@@ -1,10 +1,13 @@
 ---
-apis:
+clients:
   # github repositories options - see https://github.com/PyGithub/PyGithub/blob/master/github/MainClass.py#L112
-  github:
-    - base_url: https://github.com/iilei/pairing_matrix.git
+  - api: github
+    options:
+      base_url: https://github.com
       login_or_token: '{{ .Env.ACCESS_TOKEN_GITHUB }}'
+    repos:
+      - xyz
   # gitlab repositories options - see https://github.com/python-gitlab/python-gitlab/blob/master/gitlab/__init__.py#L51
-  # gitlab:
-  #  - base_url: ...
+  #  - api: gitlab
+  #    base_url: ...
   #    access_token: '{{ .Env.ACCESS_TOKEN_GITLAB }}'
