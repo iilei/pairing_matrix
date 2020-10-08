@@ -5,13 +5,11 @@ import argparse
 # import os
 import asyncio
 import os
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Union, List, Type
 from pytz import all_timezones
 
 from config42 import ConfigManager
 from dotenv import find_dotenv
-from gitlab import Gitlab
-from github import Github
 from datemath import dm as datemath
 import pairing_matrix.clients as clients
 
@@ -22,25 +20,27 @@ from .defaults import DEFAULT_CONFIG, DEFAULT_OPTS
 
 class Main:
     def __init__(self, config):
+        self.config = config.as_dict()
         self.APIS_AVAILABLE = ['github', 'gitlab']
         self.NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
-        self.options = config.get('options')
-        self.client_configs = config.as_dict().get('clients')
+        self.options = self.config.get('options')
+        self.client_configs = self.config.get('clients')
         self.client_handlers = self.map_apis_to_client_handlers()
+        timespan_string = self.config.get('timespan', DEFAULT_OPTS.get('timespan'))
+        self.timespan = self.get_time_range(timespan_string)
 
-        # TODO The following is to be executed on a per-client basis
-        # self.repo_matchers = self.repos_to_matchers(repos=self.repos)
+        for handler in self.client_handlers:
+            print(handler.get_commits())
 
-        self.exec(config)
-
-    def map_apis_to_client_handlers(self):
+    def map_apis_to_client_handlers(
+        self,
+    ) -> List[Union[Type[clients.GithubClient], Type[clients.GitlabClient]]]:
         handlers = []
         for client_config in self.client_configs:
             api = self.get_or_guess_api(client_config)
             # based on the api name (e.g 'github'),
             # derive the respective class name (e.g. 'GithubClient')
-            client = getattr(clients, f'{api.capitalize()}Client')
-            client.options = client_config
+            client = getattr(clients, f'{api.capitalize()}Client')(**client_config)
             handlers.append(client)
         return handlers
 
@@ -74,43 +74,35 @@ class Main:
 
         if len(apis_by_base_url) == 1:
             return apis_by_base_url[0]
+
         raise AttributeError(f'Insufficient options for ${base_url}')
 
-    async def get_client(self, config):
-        api = self.get_or_guess_api(config)
-        # let's be defensive and not mutate the original config;
-        options = config.get('options')
-        repos = config.get('repos')
+    # async def get_client(self, config):
+    #     api = self.get_or_guess_api(config)
+    #     # let's be defensive and not mutate the original config;
+    #     options = config.get('options')
+    #     repos = config.get('repos')
+    #
+    #     if api == 'github':
+    #         await self.get_github_history(options, repos)
+    #     else:
+    #         await self.get_gitlab_history(options, repos)
 
-        if api == 'github':
-            await self.get_github_history(options, repos)
-        else:
-            await self.get_gitlab_history(options, repos)
-
-    async def get_github_history(self, config, repos):
-        # testing
-        _config = {**config, 'login_or_token': os.environ.get('ACCESS_TOKEN_GITHUB')}
-
-        g = Github(**_config)
-        for repo in g.get_user().get_repos():
-            if repo.name in repos:
-                print(repo.name)
-
-    async def get_gitlab_history(self, config):
-        g = Gitlab(**config)
-        print(g)
-
-    async def gather_commits(self, clients, from_time, to_time):
-        await asyncio.gather(*map(self.get_client, clients))
-
-    async def exec(self, config):
-        # timespan_string = config.as_dict() \
-        #                       .get('timespan', DEFAULT_OPTS.get('timespan'))
-        # timespan = self.get_time_range(timespan_string)
-        # loop = asyncio.get_event_loop()
-        #
-        # loop.run_until_complete(self.gather_commits(self.clients, *timespan))
-        return 0
+    # async def get_github_history(self, config, repos):
+    #     # testing
+    #     _config = {**config, 'login_or_token': os.environ.get('ACCESS_TOKEN_GITHUB')}
+    #
+    #     g = Github(**_config)
+    #     for repo in g.get_user().get_repos():
+    #         if repo.name in repos:
+    #             print(repo.name)
+    #
+    # async def get_gitlab_history(self, config):
+    #     g = Gitlab(**config)
+    #     print(g)
+    #
+    # async def gather_commits(self, clients, from_time, to_time):
+    #     await asyncio.gather(*map(self.get_client, clients))
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -157,3 +149,5 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         config.set('timespan', args.timespan)
 
     Main(config)
+
+    return 0

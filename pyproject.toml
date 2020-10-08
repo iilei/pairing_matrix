@@ -38,6 +38,7 @@ config42 = {git = "https://github.com/yurilaaziz/config42.git", rev = "116c4bca9
 python-gitlab = "^2.5.0"
 python-datemath = "^1.5.2"
 pytz = "^2020.1"
+ramda = "^0.5.7"
 
 
 [tool.poetry.dev-dependencies]
