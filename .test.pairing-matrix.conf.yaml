@@ -5,7 +5,7 @@ clients:
     options:
       login_or_token: '{{ .Env.ACCESS_TOKEN_GITHUB }}'
     repos:
-      - pairing_matrix
+      - /^pairing_.*/
   # gitlab repositories options - see https://github.com/python-gitlab/python-gitlab/blob/master/gitlab/__init__.py#L51
   #  - api: gitlab
   #    base_url: ...

@@ -4,6 +4,7 @@ import argparse
 
 # import os
 import asyncio
+import os
 from typing import Optional, Sequence
 from pytz import all_timezones
 
@@ -12,75 +13,108 @@ from dotenv import find_dotenv
 from gitlab import Gitlab
 from github import Github
 from datemath import dm as datemath
+import pairing_matrix.clients as clients
+
 import re
 
 from .defaults import DEFAULT_CONFIG, DEFAULT_OPTS
 
 
-APIS_AVAILABLE = ['github', 'gitlab']
-NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
+class Main:
+    def __init__(self, config):
+        self.APIS_AVAILABLE = ['github', 'gitlab']
+        self.NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
+        self.options = config.get('options')
+        self.client_configs = config.as_dict().get('clients')
+        self.client_handlers = self.map_apis_to_client_handlers()
 
+        # TODO The following is to be executed on a per-client basis
+        # self.repo_matchers = self.repos_to_matchers(repos=self.repos)
 
-def get_time_range(timespan):
-    (tz,) = list(
-        filter(lambda _tz: re.match(fr'.*\b{_tz}\b.*', timespan), all_timezones)
-    ) or ['UTC']
-    timespan = re.sub(fr'[ ;/\-\s,]*{tz}[ ;/\-\s,]*', ' ', timespan)
-    now = re.search(NOW_REGEX, timespan)
-    timespan = re.sub(NOW_REGEX, '', timespan).strip()
-    src_timestamp = None
-    if now and now[1]:
-        src_timestamp = datemath(now[1])
+        self.exec(config)
 
-    _time_a, _time_b = re.split(re.compile(r'\s+-\s+'), timespan)
-    from_to = [
-        datemath(_time_a.strip(), tz=tz, now=src_timestamp),
-        datemath(_time_b.strip(), tz=tz, now=src_timestamp),
-    ]
-    from_to.sort()
-    return from_to
+    def map_apis_to_client_handlers(self):
+        handlers = []
+        for client_config in self.client_configs:
+            api = self.get_or_guess_api(client_config)
+            # based on the api name (e.g 'github'),
+            # derive the respective class name (e.g. 'GithubClient')
+            client = getattr(clients, f'{api.capitalize()}Client')
+            client.options = client_config
+            handlers.append(client)
+        return handlers
 
+    def get_time_range(self, timespan):
+        (tz,) = list(
+            filter(lambda _tz: re.match(fr'.*\b{_tz}\b.*', timespan), all_timezones)
+        ) or ['UTC']
+        timespan = re.sub(fr'[ ;/\-\s,]*{tz}[ ;/\-\s,]*', ' ', timespan)
+        now = re.search(self.NOW_REGEX, timespan)
+        timespan = re.sub(self.NOW_REGEX, '', timespan).strip()
+        src_timestamp = None
+        if now and now[1]:
+            src_timestamp = datemath(now[1])
 
-def get_or_guess_api(config):
-    api = config.get('api', None)
-    base_url = config.get('options', {}).get('base_url', '')
-    if api:
-        return api
-    apis_by_base_url = list(filter(lambda _api: _api in base_url, APIS_AVAILABLE)) or [
-        None
-    ]
+        _time_a, _time_b = re.split(re.compile(r'\s+-\s+'), timespan)
+        from_to = [
+            datemath(_time_a.strip(), tz=tz, now=src_timestamp),
+            datemath(_time_b.strip(), tz=tz, now=src_timestamp),
+        ]
+        from_to.sort()
+        return from_to
 
-    if len(apis_by_base_url) == 1:
-        return apis_by_base_url[0]
-    raise AttributeError(f'Insufficient options for ${base_url}')
+    def get_or_guess_api(self, config):
+        api = config.get('api', None)
+        base_url = config.get('options', {}).get('base_url', '')
+        if api:
+            return api
+        apis_by_base_url = list(
+            filter(lambda _api: _api in base_url, self.APIS_AVAILABLE)
+        ) or [None]
 
+        if len(apis_by_base_url) == 1:
+            return apis_by_base_url[0]
+        raise AttributeError(f'Insufficient options for ${base_url}')
 
-async def get_client(config):
-    api = get_or_guess_api(config)
-    # let's be defensive and not mutate the original config;
-    options = config.get('options')
+    async def get_client(self, config):
+        api = self.get_or_guess_api(config)
+        # let's be defensive and not mutate the original config;
+        options = config.get('options')
+        repos = config.get('repos')
 
-    if api == 'github':
-        await get_github_history(options)
-    else:
-        await get_gitlab_history(options)
+        if api == 'github':
+            await self.get_github_history(options, repos)
+        else:
+            await self.get_gitlab_history(options, repos)
 
+    async def get_github_history(self, config, repos):
+        # testing
+        _config = {**config, 'login_or_token': os.environ.get('ACCESS_TOKEN_GITHUB')}
 
-async def get_github_history(config):
-    g = Github(**config)
-    print(g)
+        g = Github(**_config)
+        for repo in g.get_user().get_repos():
+            if repo.name in repos:
+                print(repo.name)
 
+    async def get_gitlab_history(self, config):
+        g = Gitlab(**config)
+        print(g)
 
-async def get_gitlab_history(config):
-    g = Gitlab(**config)
-    print(g)
+    async def gather_commits(self, clients, from_time, to_time):
+        await asyncio.gather(*map(self.get_client, clients))
 
-
-async def gather_commits(clients, from_time, to_time):
-    await asyncio.gather(*map(get_client, clients))
+    async def exec(self, config):
+        # timespan_string = config.as_dict() \
+        #                       .get('timespan', DEFAULT_OPTS.get('timespan'))
+        # timespan = self.get_time_range(timespan_string)
+        # loop = asyncio.get_event_loop()
+        #
+        # loop.run_until_complete(self.gather_commits(self.clients, *timespan))
+        return 0
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
+    # tbd; use click ?
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--config-path',
@@ -122,10 +156,4 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.timespan:
         config.set('timespan', args.timespan)
 
-    timespan_string = config.as_dict().get('timespan', DEFAULT_OPTS.get('timespan'))
-    timespan = get_time_range(timespan_string)
-    loop = asyncio.get_event_loop()
-    clients = config.as_dict().get('clients')
-    loop.run_until_complete(gather_commits(clients, *timespan))
-
-    return 0
+    Main(config)
