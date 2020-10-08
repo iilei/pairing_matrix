@@ -3,15 +3,19 @@ import re
 from typing import NewType, Union, Type
 from github import Github
 from gitlab import Gitlab
+from pairing_matrix.author import Author
+import ramda
 
 GenericClient = NewType('GenericClient', Union[Type[Github], Type[Gitlab], None])
 
 
 class BaseClient:
-    def __init__(self, **kwargs):
+    def __init__(self, timespan, **kwargs):
         self._options = {**kwargs}
         self.client = GenericClient(None)
+        self.timespan = timespan
         self.apply_options()
+        self._authors = []
 
     def instantiate_client(self):
         return GenericClient(None)
@@ -21,17 +25,30 @@ class BaseClient:
         self.client = self.instantiate_client()
 
     @property
+    def authors(self):
+        return self._authors
+
+    def track_author(self, email, **kwargs):
+        if ramda.none(lambda a: a.email == email, self._authors):
+            self._authors.append(Author(email=email, **kwargs))
+
+    @property
     def options(self):
-        return self.options
+        return self._options
 
     @options.setter
     def options(self, value):
-        self.options = value
+        self._options = value
         self.apply_options()
 
     def repos_to_matchers(self):
         matchers = []
-        for repo in self._options.get('repos'):
+        repos = self._options.get('repos')
+
+        if repos == '*':
+            return [lambda: True]
+
+        for repo in repos:
             # determine regex / plain string
             if re.match(r'^/.+/$', repo):
                 # strip slashes at the start and end

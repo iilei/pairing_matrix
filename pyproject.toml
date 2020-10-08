@@ -39,6 +39,7 @@ python-gitlab = "^2.5.0"
 python-datemath = "^1.5.2"
 pytz = "^2020.1"
 ramda = "^0.5.7"
+arrow = "^0.17.0"
 
 
 [tool.poetry.dev-dependencies]

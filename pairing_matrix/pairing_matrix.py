@@ -2,9 +2,6 @@
 
 import argparse
 
-# import os
-import asyncio
-import os
 from typing import Optional, Sequence, Union, List, Type
 from pytz import all_timezones
 
@@ -25,10 +22,10 @@ class Main:
         self.NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
         self.options = self.config.get('options')
         self.client_configs = self.config.get('clients')
-        self.client_handlers = self.map_apis_to_client_handlers()
         timespan_string = self.config.get('timespan', DEFAULT_OPTS.get('timespan'))
         self.timespan = self.get_time_range(timespan_string)
 
+        self.client_handlers = self.map_apis_to_client_handlers()
         for handler in self.client_handlers:
             print(handler.get_commits())
 
@@ -40,7 +37,9 @@ class Main:
             api = self.get_or_guess_api(client_config)
             # based on the api name (e.g 'github'),
             # derive the respective class name (e.g. 'GithubClient')
-            client = getattr(clients, f'{api.capitalize()}Client')(**client_config)
+            client = getattr(clients, f'{api.capitalize()}Client')(
+                timespan=self.timespan, **client_config
+            )
             handlers.append(client)
         return handlers
 

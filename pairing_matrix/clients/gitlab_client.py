@@ -1,10 +1,11 @@
 from . import BaseClient
-from gitlab import Gitlab
+
+# from gitlab import Gitlab
 
 
 class GitlabClient(BaseClient):
-    def __init__(self, **kwargs):
-        BaseClient.__init__(**kwargs)
+    def __init__(self, timespan, **kwargs):
+        self.base = BaseClient.__init__(self, timespan, **kwargs)
 
-    def instantiate_client(self):
-        g = Gitlab()
+    # def instantiate_client(self):
+    #     g = Gitlab()
