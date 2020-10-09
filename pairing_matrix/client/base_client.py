@@ -20,8 +20,14 @@ class BaseClient:
         self._options = {**kwargs}
         self.client = GenericClient(None)
         self.timespan = timespan
-        self.apply_options()
         self._authors = []
+        self._pairs = []
+
+        self.apply_options()
+        self.run()
+
+    def run(self):
+        self.get_commits()
 
     def instantiate_client(self):
         return GenericClient(None)
@@ -34,6 +40,14 @@ class BaseClient:
         )
         self.coauthor_regex = re.compile(COAUTHOR_NAME_EMAIL_REGEX)
 
+    def track_pairing(self, author_a, author_b):
+        pair = sorted((author_a, author_b), key=lambda author: author.email)
+        self._pairs.append(pair)
+
+    @property
+    def pairs(self):
+        return self._pairs
+
     @property
     def authors(self):
         return self._authors
@@ -45,15 +59,19 @@ class BaseClient:
     def author_is_tracked(self, email):
         return ramda.any(lambda a: a.email == email, self._authors)
 
-    def update_author(self, email, **kwargs):
-        [target_instance] = list(filter(lambda b: b.email == email, self._authors))
-        target_instance.update(email=email, **kwargs)
+    def update_author(self, author):
+        [target_instance] = list(
+            filter(lambda b: b.email == author.email, self._authors)
+        )
+        target_instance.update(
+            email=author.email, name=author.name, url=author.url, avatar=author.avatar
+        )
 
-    def track_author(self, email, **kwargs):
-        if not self.author_is_tracked(email=email):
-            self._authors.append(Author(email=email, **kwargs))
+    def track_author(self, author):
+        if not self.author_is_tracked(email=author.email):
+            self._authors.append(author)
         else:
-            self.update_author(email, **kwargs)
+            self.update_author(author)
 
     @property
     def options(self):

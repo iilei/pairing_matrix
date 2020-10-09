@@ -5,6 +5,7 @@ import ramda
 from github import Github
 
 from . import BaseClient
+from ..author import Author
 
 
 class GithubClient(BaseClient):
@@ -32,28 +33,26 @@ class GithubClient(BaseClient):
                 for c in repo.get_commits():
                     last_mod = arrow.get(c.commit.author.date)
                     message = c.commit.raw_data.get('message')
-                    author_email = c.commit.author.email
-                    author_name = c.commit.author.name
-                    author_avatar = c.commit.author.raw_data.get('avatar_url')
-                    author_url = c.commit.author.raw_data.get('url')
+
+                    author = Author(
+                        email=c.commit.author.email,
+                        name=c.commit.author.name,
+                        avatar=c.commit.author.raw_data.get('avatar_url'),
+                        url=c.commit.author.raw_data.get('url'),
+                    )
 
                     keep = last_mod >= since and until <= last_mod
 
-                    self.track_author(
-                        email=author_email,
-                        name=author_name,
-                        url=author_url,
-                        avatar=author_avatar,
-                    )
+                    self.track_author(author)
 
                     if not keep:
                         if last_mod < since:
-                            print(self.authors)
                             break
                         return
 
-                    coauthors = self.determine_coauthors(message)
-                    for coauthor in coauthors:
-                        self.track_author(email=coauthor.email, name=coauthor.name)
+                    for coauthor in self.determine_coauthors(message):
+                        self.track_author(coauthor)
+                        self.track_pairing(coauthor, author)
 
-        repo.get_commits()
+                    # TODO
+                    # keep track of co-authored commit count

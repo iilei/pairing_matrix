@@ -32,7 +32,7 @@ class Main:
 
         self.client_handlers = self.map_apis_to_client_handlers()
         for handler in self.client_handlers:
-            print(handler.get_commits())
+            print(handler.pairs)
 
     def map_apis_to_client_handlers(
         self,
