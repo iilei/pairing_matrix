@@ -1,7 +1,8 @@
 import io
 
-from pairing_matrix.pairing_matrix import main
 from dotenv import find_dotenv, load_dotenv
+
+from pairing_matrix.pairing_matrix import main
 
 load_dotenv(find_dotenv('.test.env'))
 

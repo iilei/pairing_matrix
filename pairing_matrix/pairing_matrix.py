@@ -1,16 +1,15 @@
 #! /usr/bin/env python
 
 import argparse
-
-from typing import Optional, Sequence, Union, List, Type
-from pytz import all_timezones
+import re
+from typing import List, Optional, Sequence, Type, Union
 
 from config42 import ConfigManager
-from dotenv import find_dotenv
 from datemath import dm as datemath
-import pairing_matrix.clients as clients
+from dotenv import find_dotenv
+from pytz import all_timezones
 
-import re
+import pairing_matrix.clients as clients
 
 from .defaults import DEFAULT_CONFIG, DEFAULT_OPTS
 
@@ -32,14 +31,14 @@ class Main:
     def map_apis_to_client_handlers(
         self,
     ) -> List[Union[Type[clients.GithubClient], Type[clients.GitlabClient]]]:
+        _clients = {
+            'gitlab': clients.GitlabClient,
+            'github': clients.GithubClient,
+        }
         handlers = []
         for client_config in self.client_configs:
             api = self.get_or_guess_api(client_config)
-            # based on the api name (e.g 'github'),
-            # derive the respective class name (e.g. 'GithubClient')
-            client = getattr(clients, f'{api.capitalize()}Client')(
-                timespan=self.timespan, **client_config
-            )
+            client = _clients.get(api)(timespan=self.timespan, **client_config)
             handlers.append(client)
         return handlers
 

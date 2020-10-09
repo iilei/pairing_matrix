@@ -1,8 +1,10 @@
 import os
+
 import arrow
-from . import BaseClient
-from github import Github
 import ramda
+from github import Github
+
+from . import BaseClient
 
 
 class GithubClient(BaseClient):

@@ -1,10 +1,11 @@
 import re
+from typing import NewType, Type, Union
 
-from typing import NewType, Union, Type
+import ramda
 from github import Github
 from gitlab import Gitlab
+
 from pairing_matrix.author import Author
-import ramda
 
 GenericClient = NewType('GenericClient', Union[Type[Github], Type[Gitlab], None])
 
@@ -28,8 +29,11 @@ class BaseClient:
     def authors(self):
         return self._authors
 
+    def author_is_tracked(self, email):
+        ramda.any(lambda a: a.email == email, self._authors)
+
     def track_author(self, email, **kwargs):
-        if ramda.none(lambda a: a.email == email, self._authors):
+        if not self.author_is_tracked(email=email):
             self._authors.append(Author(email=email, **kwargs))
 
     @property
