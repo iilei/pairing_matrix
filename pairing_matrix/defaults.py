@@ -17,6 +17,6 @@ DEFAULT_OPTS = {
 }
 DEFAULT_CONFIG = {
     'timespan': DEFAULT_OPTS.get('timespan'),
-    'pattern': r'/(?<=Co-authored-by:\s)[^<\n]*[^\s<]/g',
+    'pattern': r'(?<=Co-authored-by:\s)[^<\n]+<.*>',
     'clients': [],
 }

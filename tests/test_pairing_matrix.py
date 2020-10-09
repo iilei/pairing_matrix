@@ -1,6 +1,7 @@
 import io
 
-from dotenv import find_dotenv, load_dotenv
+from dotenv import find_dotenv
+from dotenv import load_dotenv
 
 from pairing_matrix.pairing_matrix import main
 

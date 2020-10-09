@@ -1,17 +1,21 @@
 #! /usr/bin/env python
-
 import argparse
 import re
-from typing import List, Optional, Sequence, Type, Union
+from typing import List
+from typing import Optional
+from typing import Sequence
+from typing import Type
+from typing import Union
 
 from config42 import ConfigManager
 from datemath import dm as datemath
 from dotenv import find_dotenv
 from pytz import all_timezones
 
-import pairing_matrix.clients as clients
-
-from .defaults import DEFAULT_CONFIG, DEFAULT_OPTS
+from .defaults import DEFAULT_CONFIG
+from .defaults import DEFAULT_OPTS
+from pairing_matrix.client import GithubClient
+from pairing_matrix.client import GitlabClient
 
 
 class Main:
@@ -22,6 +26,8 @@ class Main:
         self.options = self.config.get('options')
         self.client_configs = self.config.get('clients')
         timespan_string = self.config.get('timespan', DEFAULT_OPTS.get('timespan'))
+        self.fallback_pattern = self.config.get('pattern', DEFAULT_CONFIG.get('pattern'))
+
         self.timespan = self.get_time_range(timespan_string)
 
         self.client_handlers = self.map_apis_to_client_handlers()
@@ -30,15 +36,21 @@ class Main:
 
     def map_apis_to_client_handlers(
         self,
-    ) -> List[Union[Type[clients.GithubClient], Type[clients.GitlabClient]]]:
+    ) -> List[Union[Type[GithubClient], Type[GitlabClient]]]:
         _clients = {
-            'gitlab': clients.GitlabClient,
-            'github': clients.GithubClient,
+            'gitlab': GitlabClient,
+            'github': GithubClient,
         }
         handlers = []
         for client_config in self.client_configs:
             api = self.get_or_guess_api(client_config)
-            client = _clients.get(api)(timespan=self.timespan, **client_config)
+            client = _clients.get(api)(
+                timespan=self.timespan,
+                **{
+                    **client_config,
+                    'pattern': client_config.get('client_config', self.fallback_pattern),
+                },
+            )
             handlers.append(client)
         return handlers
 
@@ -74,33 +86,6 @@ class Main:
             return apis_by_base_url[0]
 
         raise AttributeError(f'Insufficient options for ${base_url}')
-
-    # async def get_client(self, config):
-    #     api = self.get_or_guess_api(config)
-    #     # let's be defensive and not mutate the original config;
-    #     options = config.get('options')
-    #     repos = config.get('repos')
-    #
-    #     if api == 'github':
-    #         await self.get_github_history(options, repos)
-    #     else:
-    #         await self.get_gitlab_history(options, repos)
-
-    # async def get_github_history(self, config, repos):
-    #     # testing
-    #     _config = {**config, 'login_or_token': os.environ.get('ACCESS_TOKEN_GITHUB')}
-    #
-    #     g = Github(**_config)
-    #     for repo in g.get_user().get_repos():
-    #         if repo.name in repos:
-    #             print(repo.name)
-    #
-    # async def get_gitlab_history(self, config):
-    #     g = Gitlab(**config)
-    #     print(g)
-    #
-    # async def gather_commits(self, clients, from_time, to_time):
-    #     await asyncio.gather(*map(self.get_client, clients))
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:

@@ -46,10 +46,14 @@ class GithubClient(BaseClient):
                         avatar=author_avatar,
                     )
 
-                    if keep:
-                        print(last_mod, message)
+                    if not keep:
+                        if last_mod < since:
+                            print(self.authors)
+                            break
+                        return
 
-                    if last_mod < since:
-                        break
+                    coauthors = self.determine_coauthors(message)
+                    for coauthor in coauthors:
+                        self.track_author(email=coauthor.email, name=coauthor.name)
 
         repo.get_commits()
