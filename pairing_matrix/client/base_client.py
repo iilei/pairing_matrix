@@ -41,12 +41,22 @@ class BaseClient:
         self.coauthor_regex = re.compile(COAUTHOR_NAME_EMAIL_REGEX)
 
     def track_pairing(self, author_a, author_b):
-        pair = sorted((author_a, author_b), key=lambda author: author.email)
-        self._pairs.append(pair)
+        pair = sorted((author_a, author_b), key=lambda author: author.get('email'))
+        a, b = pair
+
+        self._pairs.append(
+            (Author(email=a.get('email'), **a), Author(email=b.get('email'), **b))
+        )
 
     @property
     def pairs(self):
         return self._pairs
+
+    @property
+    def pair_stats(self):
+        return ramda.count_by(
+            lambda pair: f'{pair[0].email}; {pair[1].email}', self._pairs
+        )
 
     @property
     def authors(self):
@@ -56,22 +66,18 @@ class BaseClient:
     def authors(self, authors):
         self._authors = authors
 
-    def author_is_tracked(self, email):
-        return ramda.any(lambda a: a.email == email, self._authors)
+    def update_author(self, email, **kwargs):
+        [target_instance] = list(filter(lambda b: b.email == email, self._authors))
+        target_instance.update(email=email, **kwargs)
 
-    def update_author(self, author):
-        [target_instance] = list(
-            filter(lambda b: b.email == author.email, self._authors)
-        )
-        target_instance.update(
-            email=author.email, name=author.name, url=author.url, avatar=author.avatar
-        )
-
-    def track_author(self, author):
-        if not self.author_is_tracked(email=author.email):
-            self._authors.append(author)
+    def track_author(self, email, **kwargs):
+        if not self.find_author(email=email):
+            self._authors.append(Author(email=email, **kwargs))
         else:
-            self.update_author(author)
+            self.update_author(email, **kwargs)
+
+    def find_author(self, email):
+        return ramda.find(lambda a: a.email == email, self._authors)
 
     @property
     def options(self):
@@ -90,7 +96,12 @@ class BaseClient:
             if found and len(found) != 1:
                 next()
             name, email = found[0]
-            result.append(Author(email=email, name=name))
+
+            if found_author := self.find_author(email):
+                result.append(found_author.as_dict())
+            else:
+                result.append({'email': email, 'name': name})
+
         return result
 
     def repos_to_matchers(self):

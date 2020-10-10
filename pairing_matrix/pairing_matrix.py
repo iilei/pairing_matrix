@@ -7,6 +7,7 @@ from typing import Sequence
 from typing import Type
 from typing import Union
 
+import ramda
 from config42 import ConfigManager
 from datemath import dm as datemath
 from dotenv import find_dotenv
@@ -31,20 +32,49 @@ class Main:
         self.timespan = self.get_time_range(timespan_string)
 
         self.client_handlers = self.map_apis_to_client_handlers()
+        self._pair_stats = []
+        self._authors = []
+        self.pair_stats = {}
+        self.authors = {}
         for handler in self.client_handlers:
-            print(handler.pairs)
+            self._pair_stats.append(handler.pair_stats)
+            self._authors.append(handler.authors)
+
+        self.accumulate_pair_stats()
+        self.accumulate_authors()
+
+        print(self.authors)
+        print(self.pair_stats)
+
+    def accumulate_authors(self):
+        _authors_instances = ramda.flatten(self._authors)
+        _authors_dicts = ramda.map(lambda _author: _author.as_dict(), _authors_instances)
+        for author in _authors_dicts:
+            occurrences = ramda.filter(
+                lambda _author: _author.get('email') == author.get('email'),
+                _authors_dicts,
+            )
+            most_informative = ramda.reduce(lambda _a, _b: {**_a, **_b}, {}, occurrences)
+            self.authors.update({f"{ author.get('email')}": most_informative})
+
+    def accumulate_pair_stats(self):
+        self.pair_stats = ramda.reduce(
+            lambda a, b: ramda.merge_with(lambda _a, _b: _a + _b, a, b),
+            {},
+            self._pair_stats,
+        )
 
     def map_apis_to_client_handlers(
         self,
     ) -> List[Union[Type[GithubClient], Type[GitlabClient]]]:
-        _clients = {
+        clients = {
             'gitlab': GitlabClient,
             'github': GithubClient,
         }
         handlers = []
         for client_config in self.client_configs:
             api = self.get_or_guess_api(client_config)
-            client = _clients.get(api)(
+            client = clients.get(api)(
                 timespan=self.timespan,
                 **{
                     **client_config,

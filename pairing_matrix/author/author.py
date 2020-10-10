@@ -18,6 +18,10 @@ class Author:
     def avatar(self):
         return self._attrs.get('avatar')
 
+    @property
+    def alias(self):
+        return self._attrs.get('alias')
+
     def update(self, email, **kwargs):
         if email == self._attrs.get('email'):
             _name = self._attrs.get('name')
@@ -30,4 +34,5 @@ class Author:
             'name': self._attrs.get('name'),
             'url': self._attrs.get('url'),
             'avatar': self._attrs.get('avatar'),
+            'alias': self._attrs.get('alias'),
         }

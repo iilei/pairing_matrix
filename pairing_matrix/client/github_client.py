@@ -5,7 +5,6 @@ import ramda
 from github import Github
 
 from . import BaseClient
-from ..author import Author
 
 
 class GithubClient(BaseClient):
@@ -33,17 +32,23 @@ class GithubClient(BaseClient):
                 for c in repo.get_commits():
                     last_mod = arrow.get(c.commit.author.date)
                     message = c.commit.raw_data.get('message')
+                    committer = c.committer.raw_data
 
-                    author = Author(
-                        email=c.commit.author.email,
-                        name=c.commit.author.name,
-                        avatar=c.commit.author.raw_data.get('avatar_url'),
-                        url=c.commit.author.raw_data.get('url'),
-                    )
+                    # author_equals_committer = False
+
+                    author = {
+                        'email': c.commit.author.email,
+                        'name': c.commit.author.name,
+                        # N.B: deriving the following three properties is a matter of
+                        # trust. committer ist not necessarily equal to author
+                        'avatar': committer.get('avatar_url'),
+                        'url': committer.get('html_url'),
+                        'alias': committer.get('login'),
+                    }
 
                     keep = last_mod >= since and until <= last_mod
 
-                    self.track_author(author)
+                    self.track_author(**author)
 
                     if not keep:
                         if last_mod < since:
