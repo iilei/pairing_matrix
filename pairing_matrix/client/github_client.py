@@ -34,17 +34,19 @@ class GithubClient(BaseClient):
                     message = c.commit.raw_data.get('message')
                     committer = c.committer.raw_data
 
-                    # author_equals_committer = False
-
                     author = {
                         'email': c.commit.author.email,
                         'name': c.commit.author.name,
-                        # N.B: deriving the following three properties is a matter of
-                        # trust. committer ist not necessarily equal to author
-                        'avatar': committer.get('avatar_url'),
-                        'url': committer.get('html_url'),
-                        'alias': committer.get('login'),
                     }
+
+                    if committer.get('email') == c.commit.author.email:
+                        author.update(
+                            {
+                                'avatar': committer.get('avatar_url'),
+                                'url': committer.get('html_url'),
+                                'alias': committer.get('login'),
+                            }
+                        )
 
                     keep = last_mod >= since and until <= last_mod
 

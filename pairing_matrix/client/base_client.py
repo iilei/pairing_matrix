@@ -44,9 +44,7 @@ class BaseClient:
         pair = sorted((author_a, author_b), key=lambda author: author.get('email'))
         a, b = pair
 
-        self._pairs.append(
-            (Author(email=a.get('email'), **a), Author(email=b.get('email'), **b))
-        )
+        self._pairs.append((Author(**a), Author(**b)))
 
     @property
     def pairs(self):
