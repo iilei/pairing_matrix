@@ -17,12 +17,17 @@ from .defaults import DEFAULT_CONFIG
 from .defaults import DEFAULT_OPTS
 from pairing_matrix.client import GithubClient
 from pairing_matrix.client import GitlabClient
+from pairing_matrix.stats_to_matrix import stats_to_matrix
 
 
 class Main:
     def __init__(self, config):
+        self.clients_available = {
+            'gitlab': GitlabClient,
+            'github': GithubClient,
+        }
+        self.APIS_AVAILABLE = self.clients_available.keys()
         self.config = config.as_dict()
-        self.APIS_AVAILABLE = ['github', 'gitlab']
         self.NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
         self.options = self.config.get('options')
         self.client_configs = self.config.get('clients')
@@ -43,8 +48,7 @@ class Main:
         self.accumulate_pair_stats()
         self.accumulate_authors()
 
-        print(self.authors)
-        print(self.pair_stats)
+        print(stats_to_matrix(self.pair_stats))
 
     def accumulate_authors(self):
         _authors_instances = ramda.flatten(self._authors)
@@ -64,17 +68,15 @@ class Main:
             self._pair_stats,
         )
 
+    # def map_emails_to_aliases(self):
+
     def map_apis_to_client_handlers(
         self,
     ) -> List[Union[Type[GithubClient], Type[GitlabClient]]]:
-        clients = {
-            'gitlab': GitlabClient,
-            'github': GithubClient,
-        }
         handlers = []
         for client_config in self.client_configs:
             api = self.get_or_guess_api(client_config)
-            client = clients.get(api)(
+            client = self.clients_available.get(api)(
                 timespan=self.timespan,
                 **{
                     **client_config,
