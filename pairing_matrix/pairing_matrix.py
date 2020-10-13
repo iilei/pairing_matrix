@@ -4,7 +4,6 @@ import re
 from typing import List
 from typing import Optional
 from typing import Sequence
-from typing import Type
 from typing import Union
 
 import ramda
@@ -72,7 +71,7 @@ class Main:
 
     def map_apis_to_client_handlers(
         self,
-    ) -> List[Union[Type[GithubClient], Type[GitlabClient]]]:
+    ) -> List[Union[GithubClient, GitlabClient]]:
         handlers = []
         for client_config in self.client_configs:
             api = self.get_or_guess_api(client_config)
