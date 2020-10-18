@@ -9,7 +9,7 @@ def stats_to_matrix_prep(acc, cur):
     return acc
 
 
-def stats_to_matrix(pair_stats):
+def stats_to_matrix(pair_stats, authors={}):
     result_stats = []
     pairs = ramda.to_pairs(pair_stats)
     _pair_list = ramda.reduce(stats_to_matrix_prep, [], pairs)
@@ -26,7 +26,13 @@ def stats_to_matrix(pair_stats):
                     lambda pair: pair[0] == author_a and pair[1] == author_b, pair_list
                 )
                 author_a_pair_stats.append(stat[2])
-        result_stats.append([author_a, author_a_pair_stats])
+
+        result_stats.append(
+            {
+                'author': authors.get(author_a, {}),
+                'matrix': author_a_pair_stats,
+            }
+        )
 
     return result_stats
 

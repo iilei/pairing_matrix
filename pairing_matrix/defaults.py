@@ -1,22 +1,19 @@
-DEFAULT_OPTS = {
-    # absolute path or filename for directory tree traversal search
-    'config_path': '.pairing-matrix.conf.yaml',
-    # overrides the extension seen in `config_path` - useful when
-    # subprocess redirection is employed
-    # example;
-    # pairing_matrix --config-path <( \
-    #                       godotenv -f .env \
-    #                       gomplate --file ./.test.pairing-matrix.conf.yaml
-    #                ) --config-format yaml \
-    #                --timespan
-    #
-    'config_format': 'yaml',
-    # `<from> - <to> <TZ?> <now?>`
-    # -- see https://github.com/nickmaccarthy/python-datemath
-    'timespan': 'now-14d/d - now UTC',
-}
-DEFAULT_CONFIG = {
-    'timespan': DEFAULT_OPTS.get('timespan'),
-    'pattern': r'(?<=Co-authored-by:\s)[^<\n]+<.*>',
-    'clients': [],
-}
+import functools
+
+from config42 import ConfigManager
+from dotenv import find_dotenv
+
+
+DEFAULT_CONFIG_PATH = '.default.pairing-matrix.conf.yaml'
+
+
+@functools.lru_cache()
+def get_config():
+    config_file_path = find_dotenv(
+        filename=DEFAULT_CONFIG_PATH, raise_error_if_not_found=True
+    )
+
+    return ConfigManager(path=config_file_path, extension='yaml').as_dict()
+
+
+DEFAULT_CONFIG = get_config()

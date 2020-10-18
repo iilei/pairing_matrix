@@ -58,7 +58,7 @@ class GithubClient(BaseClient):
                         return
 
                     for coauthor in self.determine_coauthors(message):
-                        self.track_author(coauthor)
+                        self.track_author(**coauthor)
                         self.track_pairing(coauthor, author)
 
                     # TODO

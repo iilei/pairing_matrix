@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 
 from pairing_matrix.pairing_matrix import main
 
-load_dotenv(find_dotenv('.test.env'))
+EXAMPLE_ENV = find_dotenv('.example.env')
+load_dotenv(EXAMPLE_ENV)
 
 
 def test_pairing_matrix(monkeypatch):

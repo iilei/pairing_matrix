@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import argparse
+import os
 import re
 from typing import List
 from typing import Optional
@@ -9,14 +10,28 @@ from typing import Union
 import ramda
 from config42 import ConfigManager
 from datemath import dm as datemath
+from deepmerge import Merger
 from dotenv import find_dotenv
+from git import Repo
 from pytz import all_timezones
 
-from .defaults import DEFAULT_CONFIG
-from .defaults import DEFAULT_OPTS
 from pairing_matrix.client import GithubClient
 from pairing_matrix.client import GitlabClient
+from pairing_matrix.defaults import DEFAULT_CONFIG
 from pairing_matrix.stats_to_matrix import stats_to_matrix
+
+author_merger = Merger(
+    # pass in a list of tuple, with the
+    # strategies you are looking to apply
+    # to each type.
+    [(list, ['override']), (dict, ['merge'])],
+    # next, choose the fallback strategies,
+    # applied to all other types:
+    ['override'],
+    # finally, choose the strategies in
+    # the case where the types conflict:
+    ['override'],
+)
 
 
 class Main:
@@ -26,11 +41,11 @@ class Main:
             'github': GithubClient,
         }
         self.APIS_AVAILABLE = self.clients_available.keys()
-        self.config = config.as_dict()
+        self.config = config
         self.NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
         self.options = self.config.get('options')
         self.client_configs = self.config.get('clients')
-        timespan_string = self.config.get('timespan', DEFAULT_OPTS.get('timespan'))
+        timespan_string = self.config.get('timespan', DEFAULT_CONFIG.get('timespan'))
         self.fallback_pattern = self.config.get('pattern', DEFAULT_CONFIG.get('pattern'))
 
         self.timespan = self.get_time_range(timespan_string)
@@ -47,18 +62,21 @@ class Main:
         self.accumulate_pair_stats()
         self.accumulate_authors()
 
-        print(stats_to_matrix(self.pair_stats))
+        self.matrix = stats_to_matrix(self.pair_stats, authors=self.authors)
 
     def accumulate_authors(self):
+        _result = {}
+        aliases = self.config.get('output', {}).get('aliases', {})
+        for (_email, _alias) in aliases.items():
+            _result[_email] = {'alias': _alias}
+
         _authors_instances = ramda.flatten(self._authors)
-        _authors_dicts = ramda.map(lambda _author: _author.as_dict(), _authors_instances)
-        for author in _authors_dicts:
-            occurrences = ramda.filter(
-                lambda _author: _author.get('email') == author.get('email'),
-                _authors_dicts,
-            )
-            most_informative = ramda.reduce(lambda _a, _b: {**_a, **_b}, {}, occurrences)
-            self.authors.update({f"{ author.get('email')}": most_informative})
+        for _author_instance in _authors_instances:
+            _author = _author_instance.as_dict()
+            _email = _author.get('email')
+            _known = _result.get(_email, {})
+            _result[_email] = author_merger.merge(_author, _known)
+        self.authors = _result
 
     def accumulate_pair_stats(self):
         self.pair_stats = ramda.reduce(
@@ -119,19 +137,24 @@ class Main:
         raise AttributeError(f'Insufficient options for ${base_url}')
 
 
+merge_config = Merger(
+    [(list, ['override']), (dict, ['merge'])], ['override'], ['override']
+).merge
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     # tbd; use click ?
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--config-path',
         type=str,
-        default=DEFAULT_OPTS.get('config_path'),
+        default='.pairing-matrix.conf.yaml',
         help='Path to configuration',
     )
     parser.add_argument(
         '--config-format',
         type=str,
-        default=DEFAULT_OPTS.get('config_format'),
+        default='yaml',
         help='Enforce config file parser; <[yaml]|json|ini|raw>',
     )
     parser.add_argument(
@@ -148,19 +171,30 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     )
 
     args = parser.parse_args(argv)
-    config = ConfigManager()
-    config.set_many(DEFAULT_CONFIG)
 
     config_file_path = find_dotenv(
         filename=args.config_path, raise_error_if_not_found=True
     )
 
-    config.set_many(
-        ConfigManager(path=config_file_path, extension=args.config_format).as_dict()
-    )
+    user_config = ConfigManager(
+        path=config_file_path, extension=args.config_format
+    ).as_dict()
+    config = merge_config(DEFAULT_CONFIG, user_config)
+    config = merge_config(config, vars(args))
 
-    if args.timespan:
-        config.set('timespan', args.timespan)
+    try:
+        output_opts = config.get('output', {})
+        highlight = output_opts.get('highlight_user')
+        if highlight and not isinstance(highlight, str):
+            user_email = (
+                Repo(os.path.dirname(config_file_path))
+                .config_reader()
+                .get('user', 'email')
+            )
+            output_opts['highlight_user'] = user_email
+        config = merge_config(config, {'output': output_opts})
+    except:  # noqa
+        pass
 
     Main(config)
 
