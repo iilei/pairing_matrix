@@ -1,13 +1,13 @@
 import io
 import textwrap
 
-from author_mocks import authors
 from dotenv import find_dotenv
 from dotenv import load_dotenv
 from faker import Faker
 from github import Github
 
 from pairing_matrix.pairing_matrix import main
+from tests.author_mocks import authors
 
 EXAMPLE_ENV = find_dotenv('.example.env')
 load_dotenv(EXAMPLE_ENV)

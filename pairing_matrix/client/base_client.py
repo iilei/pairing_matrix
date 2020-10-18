@@ -100,7 +100,8 @@ class BaseClient:
                 next()
             name, email = found[0]
 
-            if found_author := self.find_author(email):
+            found_author = self.find_author(email)
+            if found_author:
                 result.append(found_author.as_dict())
             else:
                 result.append({'email': email, 'name': name})
