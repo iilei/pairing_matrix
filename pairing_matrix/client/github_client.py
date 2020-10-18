@@ -57,9 +57,7 @@ class GithubClient(BaseClient):
                             break
                         return
 
-                    for coauthor in self.determine_coauthors(message):
-                        self.track_author(**coauthor)
-                        self.track_pairing(coauthor, author)
+                    self.track_pairing(author, *self.determine_coauthors(message))
 
                     # TODO
                     # keep track of co-authored commit count

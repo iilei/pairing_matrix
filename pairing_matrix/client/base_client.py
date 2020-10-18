@@ -1,3 +1,4 @@
+import itertools
 import re
 from typing import NewType
 from typing import Type
@@ -40,11 +41,14 @@ class BaseClient:
         )
         self.coauthor_regex = re.compile(COAUTHOR_NAME_EMAIL_REGEX)
 
-    def track_pairing(self, author_a, author_b):
-        pair = sorted((author_a, author_b), key=lambda author: author.get('email'))
-        a, b = pair
-
-        self._pairs.append((Author(**a), Author(**b)))
+    def track_pairing(self, *coauthors):
+        coauthor_emails = ramda.map(lambda _coauthor: _coauthor.get('email'), coauthors)
+        pairs = itertools.combinations(coauthor_emails, 2)
+        for pair in pairs:
+            _a, _b = pair
+            _a = ramda.find(lambda a: a.get('email') == _a, coauthors)
+            _b = ramda.find(lambda a: a.get('email') == _b, coauthors)
+            self._pairs.append((Author(**_a), Author(**_b)))
 
     @property
     def pairs(self):

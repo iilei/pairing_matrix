@@ -1,14 +1,24 @@
-import json
-
 import numpy as np
 import pandas as pd
 
 from pairing_matrix.stats_to_matrix import stats_to_matrix
 
+#     Result:
+#     ╒═════╤═══════╤═══════╤═══════╕
+#     │     │  jil  │  jim  │  joy  │
+#     ╞═════╪═══════╪═══════╪═══════╡
+#     │ jil │   -   │   1   │   5   │
+#     ├─────┼───────┼───────┼───────┤
+#     │ jim │   1   │   -   │   2   │
+#     ├─────┼───────┼───────┼───────┤
+#     │ joy │   5   │   2   │   -   │
+#     ╘═════╧═══════╧═══════╧═══════╛
+
+
 EXAMPLE_STATS = {
-    'jil.jonsen@example.com; jim.jensen@example.com': 8,
-    'jim.jensen@example.com; joy.joysen@example.com': 5,
-    'jil.jonsen@example.com; joy.joysen@example.com': 3,
+    'jil.jonsen@example.com; jim.jensen@example.com': 1,
+    'jim.jensen@example.com; joy.joysen@example.com': 2,
+    'jil.jonsen@example.com; joy.joysen@example.com': 5,
 }
 
 authors = {
@@ -47,7 +57,7 @@ def test_stats_to_matrix():
                 'avatar': None,
                 'alias': 'jil',
             },
-            'matrix': [None, 8, 3],
+            'matrix': [None, 1, 5],
         },
         {
             'author': {
@@ -57,7 +67,7 @@ def test_stats_to_matrix():
                 'avatar': None,
                 'alias': 'jim',
             },
-            'matrix': [8, None, 5],
+            'matrix': [1, None, 2],
         },
         {
             'author': {
@@ -67,11 +77,9 @@ def test_stats_to_matrix():
                 'avatar': None,
                 'alias': 'joy',
             },
-            'matrix': [3, 5, None],
+            'matrix': [5, 2, None],
         },
     ]
-
-    json.dumps(stats)
 
     raw_data = pd.DataFrame(stats)
     _indexes = raw_data.author.apply(lambda x: x.get('alias')).values
@@ -85,8 +93,9 @@ def test_stats_to_matrix():
         .fillna(value='-')
         .astype(float, errors='ignore')
     )
+
     # by adding two spaces, tabulate does not mistreat vales as floats
-    concise_data = concise_data.applymap(lambda x: x if '-' == ' - ' else f' {int(x)} ')
+    concise_data = concise_data.applymap(lambda x: ' - ' if '-' == x else f' {int(x)} ')
 
     print(
         concise_data.to_markdown(
@@ -98,9 +107,3 @@ def test_stats_to_matrix():
     print(concise_data.to_string())
     print(concise_data.to_csv())
     print(raw_data.to_json(orient='records'))
-
-    # |     |  jil  |  jim  |  joy  |
-    # |----:|:-----:|:-----:|:-----:|
-    # | jil |   -   |   8   |   3   |
-    # | jim |   8   |   -   |   5   |
-    # | joy |   3   |   5   |   -   |

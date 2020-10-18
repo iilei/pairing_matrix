@@ -65,6 +65,7 @@ pytest-mock = "^1.10"
 pytest-mypy = "^0.3.3"
 pytest-randomly = "^3.0"
 tox = "^3.13"
+faker = "^4.14.0"
 
 
 [tool.black]

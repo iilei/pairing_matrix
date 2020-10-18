@@ -196,6 +196,4 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     except:  # noqa
         pass
 
-    Main(config)
-
-    return 0
+    return Main(config)

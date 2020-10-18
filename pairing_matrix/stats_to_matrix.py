@@ -16,9 +16,9 @@ def stats_to_matrix(pair_stats, authors={}):
     pair_list = ramda.reduce(lambda acc, cur: [*acc, *cur], [], _pair_list)
     authors_emails = sorted(ramda.uniq(ramda.pluck(0, pair_list)))
 
-    for author_a in authors_emails:
+    for author_a in [*authors_emails]:
         author_a_pair_stats = []
-        for author_b in authors_emails:
+        for author_b in [*authors_emails]:
             if author_a == author_b:
                 author_a_pair_stats.append(None)
             else:
