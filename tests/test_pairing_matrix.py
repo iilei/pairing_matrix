@@ -21,6 +21,14 @@ class Author:
         self.author = author
 
     @property
+    def login(self):
+        return authors.get(self.author, {}).get('alias')
+
+    @property
+    def html_url(self):
+        return authors.get(self.author, {}).get('html_url')
+
+    @property
     def email(self):
         return self.author
 
@@ -183,9 +191,10 @@ def test_pairing_matrix(monkeypatch):
             'author': {
                 'email': 'jil.jonsen@example.com',
                 'name': 'Jil Jonsen',
-                'url': None,
-                'avatar': None,
+                'avatar_url': 'https://example.com/user/img/jil',
+                'html_url': 'https://example.com/user/jil',
                 'alias': 'jil',
+                'profile_url': 'https://example.com/user/jil',
             },
             'matrix': [None, 1, 5],
         },
@@ -193,9 +202,9 @@ def test_pairing_matrix(monkeypatch):
             'author': {
                 'email': 'jim.jensen@example.com',
                 'name': 'Jim Jensen',
-                'url': None,
-                'avatar': None,
-                'alias': 'jim',
+                'profile_url': None,
+                'avatar_url': None,
+                'alias': 'Jim Jensen',
             },
             'matrix': [1, None, 2],
         },
@@ -203,10 +212,37 @@ def test_pairing_matrix(monkeypatch):
             'author': {
                 'email': 'joy.joysen@example.com',
                 'name': 'Joy Joysen',
-                'url': None,
-                'avatar': None,
+                'avatar_url': 'https://example.com/user/img/joy',
+                'html_url': 'https://example.com/user/joy',
                 'alias': 'joy',
+                'profile_url': 'https://example.com/user/joy',
             },
             'matrix': [5, 2, None],
         },
     ]
+
+    assert result.authors == {
+        'joy.joysen@example.com': {
+            'email': 'joy.joysen@example.com',
+            'name': 'Joy Joysen',
+            'avatar_url': 'https://example.com/user/img/joy',
+            'html_url': 'https://example.com/user/joy',
+            'alias': 'joy',
+            'profile_url': 'https://example.com/user/joy',
+        },
+        'jil.jonsen@example.com': {
+            'email': 'jil.jonsen@example.com',
+            'name': 'Jil Jonsen',
+            'avatar_url': 'https://example.com/user/img/jil',
+            'html_url': 'https://example.com/user/jil',
+            'alias': 'jil',
+            'profile_url': 'https://example.com/user/jil',
+        },
+        'jim.jensen@example.com': {
+            'email': 'jim.jensen@example.com',
+            'name': 'Jim Jensen',
+            'profile_url': None,
+            'avatar_url': None,
+            'alias': 'Jim Jensen',
+        },
+    }

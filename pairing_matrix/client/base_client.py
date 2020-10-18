@@ -23,6 +23,7 @@ class BaseClient:
         self.timespan = timespan
         self._authors = []
         self._pairs = []
+        self._output_aliases = self._options.get('output_aliases', {})
 
         self.apply_options()
         self.run()

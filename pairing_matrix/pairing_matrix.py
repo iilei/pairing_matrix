@@ -45,6 +45,7 @@ class Main:
         self.NOW_REGEX = r'[\(;,]?\s*\bnow:\s*([^\s\);,]+)\s*\)?'
         self.options = self.config.get('options')
         self.client_configs = self.config.get('clients')
+        self.output_aliases = self.config.get('output', {}).get('aliases', {})
         timespan_string = self.config.get('timespan', DEFAULT_CONFIG.get('timespan'))
         self.fallback_pattern = self.config.get('pattern', DEFAULT_CONFIG.get('pattern'))
 
@@ -98,6 +99,7 @@ class Main:
                 **{
                     **client_config,
                     'pattern': client_config.get('client_config', self.fallback_pattern),
+                    'output_aliases': self.output_aliases,
                 },
             )
             handlers.append(client)

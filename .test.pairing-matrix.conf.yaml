@@ -3,7 +3,6 @@ output :
   aliases:
     joy.joysen@example.com: joy
     jil.jonsen@example.com: jil
-    jim.jensen@example.com: jim
   format: markdown
   options:
     tablefmt: pipe # see https://pypi.org/project/tabulate/

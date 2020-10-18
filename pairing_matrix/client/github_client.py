@@ -32,21 +32,15 @@ class GithubClient(BaseClient):
                 for c in repo.get_commits():
                     last_mod = arrow.get(c.commit.author.date)
                     message = c.commit.raw_data.get('message')
-                    committer = c.committer.raw_data
 
                     author = {
                         'email': c.commit.author.email,
                         'name': c.commit.author.name,
                     }
 
-                    if committer.get('email') == c.commit.author.email:
-                        author.update(
-                            {
-                                'avatar': committer.get('avatar_url'),
-                                'url': committer.get('html_url'),
-                                'alias': committer.get('login'),
-                            }
-                        )
+                    alias = self._output_aliases.get(c.commit.author.email)
+                    if isinstance(alias, str) and c.author and c.author.login == alias:
+                        author.update({**c.author.raw_data, 'alias': alias})
 
                     keep = last_mod >= since and until <= last_mod
 
@@ -58,6 +52,3 @@ class GithubClient(BaseClient):
                         return
 
                     self.track_pairing(author, *self.determine_coauthors(message))
-
-                    # TODO
-                    # keep track of co-authored commit count

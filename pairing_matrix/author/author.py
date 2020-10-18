@@ -10,29 +10,17 @@ class Author:
     def name(self):
         return self._attrs.get('name')
 
-    @property
-    def url(self):
-        return self._attrs.get('url')
-
-    @property
-    def avatar(self):
-        return self._attrs.get('avatar')
-
-    @property
-    def alias(self):
-        return self._attrs.get('alias')
-
     def update(self, email, **kwargs):
         if email == self._attrs.get('email'):
-            _name = self._attrs.get('name')
-            # ensure name keeps present even if not provided
-            self._attrs = {'name': _name, 'email': email, **kwargs}
+            # ensure name keeps present
+            self._attrs = {**self._attrs, **kwargs, 'email': email}
 
     def as_dict(self):
         return {
-            'email': self._attrs.get('email'),
-            'name': self._attrs.get('name'),
-            'url': self._attrs.get('url'),
-            'avatar': self._attrs.get('avatar'),
-            'alias': self._attrs.get('alias'),
+            **self._attrs,
+            'profile_url': self._attrs.get('html_url', self._attrs.get('url')),
+            'avatar_url': self._attrs.get('avatar_url', self._attrs.get('avatar')),
+            'alias': self._attrs.get(
+                'alias', self._attrs.get('name', self._attrs.get('email'))
+            ),
         }
