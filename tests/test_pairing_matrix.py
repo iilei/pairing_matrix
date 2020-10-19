@@ -38,7 +38,7 @@ class Author:
 
     @property
     def date(self):
-        return '2020-10-18T10:04:09+00:00'
+        return '2020-10-03T10:04:09+00:00'
 
     @property
     def raw_data(self):

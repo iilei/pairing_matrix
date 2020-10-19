@@ -42,13 +42,13 @@ class GithubClient(BaseClient):
                     if isinstance(alias, str) and c.author and c.author.login == alias:
                         author.update({**c.author.raw_data, 'alias': alias})
 
-                    keep = last_mod >= since and until <= last_mod
-
-                    self.track_author(**author)
+                    keep = last_mod <= until and last_mod >= since
 
                     if not keep:
                         if last_mod < since:
                             break
-                        return
-
-                    self.track_pairing(author, *self.determine_coauthors(message))
+                        else:
+                            print(1)
+                    else:
+                        self.track_author(**author)
+                        self.track_pairing(author, *self.determine_coauthors(message))
