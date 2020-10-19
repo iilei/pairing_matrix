@@ -12,6 +12,7 @@ build
 
 # Unit test / coverage reports / ...
 .coverage
+.coverage*
 .tox
 htmlcov
 node_modules

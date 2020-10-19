@@ -17,24 +17,24 @@ fake.seed_instance(4711)
 
 
 class Author:
-    def __init__(self, author):
-        self.author = author
+    def __init__(self, email):
+        self.author = authors.get(email, {'email': email})
 
     @property
     def login(self):
-        return authors.get(self.author, {}).get('alias')
+        return self.author.get('alias')
 
     @property
     def html_url(self):
-        return authors.get(self.author, {}).get('html_url')
+        return self.author.get('html_url')
 
     @property
     def email(self):
-        return self.author
+        return self.author.get('email')
 
     @property
     def name(self):
-        return authors.get(self.author, {}).get('name')
+        return self.author.get('name')
 
     @property
     def date(self):
@@ -43,10 +43,11 @@ class Author:
     @property
     def raw_data(self):
         return {
-            'email': self.author,
-            'avatar_url': authors.get(self.author, {}).get('avatar_url'),
-            'html_url': authors.get(self.author, {}).get('html_url'),
-            'alias': authors.get(self.author, {}).get('alias'),
+            'email': self.email,
+            'name': self.name,
+            'avatar_url': self.author.get('avatar_url'),
+            'html_url': self.author.get('html_url'),
+            'alias': self.login,
         }
 
 
