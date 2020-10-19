@@ -17,8 +17,9 @@ fake.seed_instance(4711)
 
 
 class Author:
-    def __init__(self, email):
+    def __init__(self, email, date="2020-10-03T10:04:09+00:00"):
         self.author = authors.get(email, {'email': email})
+        self._date = date
 
     @property
     def login(self):
@@ -38,7 +39,7 @@ class Author:
 
     @property
     def date(self):
-        return '2020-10-03T10:04:09+00:00'
+        return self._date
 
     @property
     def raw_data(self):
@@ -52,9 +53,10 @@ class Author:
 
 
 class Commit:
-    def __init__(self, author_a, *co_authors):
+    def __init__(self, author_a, *co_authors, date='2020-10-03T10:04:09+00:00'):
         self._co_authors = co_authors
         self._committer = author_a
+        self._date = date
 
     @property
     def commit(self):
@@ -74,11 +76,11 @@ class Commit:
 
     @property
     def committer(self):
-        return Author(self._committer)
+        return Author(self._committer, date=self._date)
 
     @property
     def author(self):
-        return Author(self._committer)
+        return Author(self._committer, date=self._date)
 
     @property
     def raw_data(self):
@@ -122,6 +124,11 @@ class MockGHGetRepos:
         return [
             Commit(
                 'jim.jensen@example.com',
+                'joy.joysen@example.com',
+                date="2020-10-05T00:01:00+02:01"
+            ),
+            Commit(
+                'jim.jensen@example.com',
                 'jil.jonsen@example.com',
                 'joy.joysen@example.com',
             ),
@@ -159,6 +166,11 @@ class MockGHGetRepos:
             ),
             Commit(
                 'jim.jensen@example.com',
+            ),
+            Commit(
+                'jim.jensen@example.com',
+                'joy.joysen@example.com',
+                date="2020-10-02T00:01:00+02:01"
             ),
         ]
 
