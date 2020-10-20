@@ -19,7 +19,7 @@ class GithubClient(BaseClient):
             }
         )
 
-    def get_commits(self):
+    def get_pairs(self):
         repo_matchers = self.repos_to_matchers()
         since, until = self.timespan
         repos = []

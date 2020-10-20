@@ -29,7 +29,7 @@ class BaseClient:
         self.run()
 
     def run(self):
-        self.get_commits()
+        self.get_pairs()
 
     def instantiate_client(self):
         return GenericClient(None)
