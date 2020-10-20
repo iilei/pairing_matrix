@@ -17,7 +17,7 @@ fake.seed_instance(4711)
 
 
 class Author:
-    def __init__(self, email, date="2020-10-03T10:04:09+00:00"):
+    def __init__(self, email, date='2020-10-03T10:04:09+00:00'):
         self.author = authors.get(email, {'email': email})
         self._date = date
 
@@ -122,10 +122,11 @@ class MockGHGetRepos:
     @staticmethod
     def get_commits():
         return [
+            # a commit just one second after the time frame of interest
             Commit(
                 'jim.jensen@example.com',
                 'joy.joysen@example.com',
-                date="2020-10-05T00:01:00+02:01"
+                date='2020-10-03T22:00:01+00:00',
             ),
             Commit(
                 'jim.jensen@example.com',
@@ -167,10 +168,11 @@ class MockGHGetRepos:
             Commit(
                 'jim.jensen@example.com',
             ),
+            # a commit just one second before the time frame of interest
             Commit(
                 'jim.jensen@example.com',
                 'joy.joysen@example.com',
-                date="2020-10-02T00:01:00+02:01"
+                date='2020-10-02T21:59:59+00:00',
             ),
         ]
 
@@ -195,7 +197,7 @@ def test_pairing_matrix(monkeypatch):
             '--config-format',
             'yaml',
             '--timespan',
-            'now-1d/d - now Europe/Berlin (now: 2020-10-04)',
+            'now-1d/d - now Europe/Berlin (now: 2020-10-03T22:00:00+00:00)',
         ]
     )
 
