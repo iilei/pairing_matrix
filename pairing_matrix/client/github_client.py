@@ -1,6 +1,5 @@
 import os
 
-import arrow
 import ramda
 from github import Github
 
@@ -29,8 +28,7 @@ class GithubClient(BaseClient):
             if ramda.any_pass(repo_matchers, repo.name):
                 repos.append(repo)
 
-                for c in repo.get_commits():
-                    last_mod = arrow.get(c.commit.author.date)
+                for c in repo.get_commits(since=since, until=until):
                     message = c.commit.raw_data.get('message')
 
                     author = {
@@ -42,13 +40,5 @@ class GithubClient(BaseClient):
                     if isinstance(alias, str) and c.author and c.author.login == alias:
                         author.update({**c.author.raw_data, 'alias': alias})
 
-                    keep = last_mod <= until and last_mod >= since
-
-                    if not keep:
-                        if last_mod < since:
-                            break
-                        else:
-                            print(1)
-                    else:
-                        self.track_author(**author)
-                        self.track_pairing(author, *self.determine_coauthors(message))
+                    self.track_author(**author)
+                    self.track_pairing(author, *self.determine_coauthors(message))

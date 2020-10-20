@@ -1,7 +1,7 @@
 ---
 output  :
   highlight_user: false # highlight the author name in output? <true|false|string<"git.user@email.example.com">>
-  aliases: []
+  aliases: {}
   format: markdown # options include 'json', 'string', 'csv'
   options:
     tablefmt: pipe # see https://pypi.org/project/tabulate/

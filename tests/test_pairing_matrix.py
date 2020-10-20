@@ -1,16 +1,11 @@
 import io
 import textwrap
 
-from dotenv import find_dotenv
-from dotenv import load_dotenv
 from faker import Faker
 from github import Github
 
 from pairing_matrix.pairing_matrix import main
 from tests.author_mocks import authors
-
-EXAMPLE_ENV = find_dotenv('.example.env')
-load_dotenv(EXAMPLE_ENV)
 
 fake = Faker()
 fake.seed_instance(4711)
@@ -120,7 +115,9 @@ class MockGHGetRepos:
         return 'pairing_matrix'
 
     @staticmethod
-    def get_commits():
+    def get_commits(
+        since='2020-10-01T21:59:59+00:00', until='2020-10-01T22:59:59+00:00'
+    ):
         return [
             # a commit just one second after the time frame of interest
             Commit(
@@ -189,6 +186,7 @@ def test_pairing_matrix(monkeypatch):
 
     monkeypatch.setattr('sys.stdin', io.StringIO(''))
     monkeypatch.setattr(Github, 'get_user', mock_get_user)
+    # todo mock gilab client
 
     result = main(
         argv=[
@@ -197,7 +195,7 @@ def test_pairing_matrix(monkeypatch):
             '--config-format',
             'yaml',
             '--timespan',
-            'now-1d/d - now Europe/Berlin (now: 2020-10-03T22:00:00+00:00)',
+            'now-1d/d - now Europe/Berlin (now: 2020-10-04T22:00:00+00:00)',
         ]
     )
 
