@@ -19,13 +19,16 @@ def stats_to_matrix(pair_stats, authors={}):
     for author_a in [*authors_emails]:
         author_a_pair_stats = []
         for author_b in [*authors_emails]:
+            stat = ramda.find(
+                lambda pair: pair[0] == author_a and pair[1] == author_b, pair_list
+            )
+
             if author_a == author_b:
                 author_a_pair_stats.append(None)
-            else:
-                stat = ramda.find(
-                    lambda pair: pair[0] == author_a and pair[1] == author_b, pair_list
-                )
+            elif stat:
                 author_a_pair_stats.append(stat[2])
+            else:
+                author_a_pair_stats.append(0)
 
         result_stats.append(
             {

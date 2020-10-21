@@ -43,13 +43,21 @@ class BaseClient:
         self.coauthor_regex = re.compile(COAUTHOR_NAME_EMAIL_REGEX)
 
     def track_pairing(self, *coauthors):
-        coauthor_emails = ramda.map(lambda _coauthor: _coauthor.get('email'), coauthors)
+        coauthor_emails = ramda.uniq(
+            ramda.map(lambda _coauthor: _coauthor.get('email'), coauthors)
+        )
         pairs = itertools.combinations(coauthor_emails, 2)
+
+        for _author in coauthors:
+            self.track_author(**_author)
+
         for pair in pairs:
             _a, _b = pair
             _a = ramda.find(lambda a: a.get('email') == _a, coauthors)
             _b = ramda.find(lambda a: a.get('email') == _b, coauthors)
-            self._pairs.append((Author(**_a), Author(**_b)))
+            self._pairs.append(
+                ramda.sort_by(lambda x: x.email, (Author(**_a), Author(**_b)))
+            )
 
     @property
     def pairs(self):

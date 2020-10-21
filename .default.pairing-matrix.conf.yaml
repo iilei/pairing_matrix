@@ -1,8 +1,7 @@
 ---
 output  :
-  highlight_user: false # highlight the author name in output? <true|false|string<"git.user@email.example.com">>
   aliases: {}
-  format: markdown # options include 'json', 'string', 'csv'
+  format: markdown
   options:
     tablefmt: pipe # see https://pypi.org/project/tabulate/
     stralign: center
@@ -12,15 +11,3 @@ output  :
 timespan: now-14d/d - now UTC
 pattern : (?<=Co-authored-by:\s)[^<\n]+<.*>
 clients : []
-  # github repositories options - see https://github.com/PyGithub/PyGithub/blob/master/github/MainClass.py#L112
-#  - api: github
-#    options:
-#      login_or_token: '{{ .Env.ACCESS_TOKEN_GITHUB }}'
-#    # repos is expected to be either literal "*" or a list of strings.
-#    # if first and last character of a string is "/" it is treated as regular expression
-#    repos:
-#      - /^pairing_.*/
-  # gitlab repositories options - see https://github.com/python-gitlab/python-gitlab/blob/master/gitlab/__init__.py#L51
-  #  - api: gitlab
-  #    base_url: ...
-  #    access_token: '{{ .Env.ACCESS_TOKEN_GITLAB }}'

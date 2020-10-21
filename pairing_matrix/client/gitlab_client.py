@@ -21,21 +21,34 @@ class GitlabClient(BaseClient):
 
     def get_pairs(self):
         repo_matchers = self.repos_to_matchers()
+
         since, until = self.timespan
         repos = []
-        projects = self.client.projects.list()
-        for project in projects:
-            if ramda.any_pass(repo_matchers, project.name):
-                repos.append(project)
+        search = self.options.get('search', None)
 
-                commits = project.commits.list(since=since, until=until)
+        if not isinstance(search, list):
+            search = [search]
 
-                for commit in commits:
-                    message = commit.message
-                    author = {
-                        'name': commit.author_name,
-                        'email': commit.author_email,
-                    }
+        if len(search) == 0:
+            search = [None]
 
-                    self.track_author(**author)
-                    self.track_pairing(author, *self.determine_coauthors(message))
+        for _search in search:
+            projects = self.client.projects.list(search=_search)
+            for project in projects:
+                if ramda.any_pass(
+                    repo_matchers, project.path_with_namespace
+                ) or ramda.any_pass(repo_matchers, project.name):
+                    repos.append(project)
+
+                    commits = project.commits.list(since=since, until=until)
+
+                    for commit in commits:
+                        message = commit.message
+                        author = {
+                            'name': commit.author_name,
+                            'email': commit.author_email,
+                        }
+
+                        self.track_pairing(author, *self.determine_coauthors(message))
+                else:
+                    print(project.name)

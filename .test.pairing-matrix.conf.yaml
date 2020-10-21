@@ -17,12 +17,14 @@ clients:
       login_or_token: '{{ .Env.ACCESS_TOKEN_GITHUB }}'
     # repos is expected to be either literal "*" or a list of strings.
     # if first and last character of a string is "/" it is treated as regular expression
-    repos:
-      - /^pairing_.*/
+    search: &gh_project_names
+      - iilei/pairing_matrix
+    repos: *gh_project_names
    # gitlab repositories options - see https://github.com/python-gitlab/python-gitlab/blob/master/gitlab/__init__.py#L51
   - api: gitlab
+    search: &gl_project_names
+      - JochenPreusche/pairing_matrix
+    repos: *gl_project_names
     options:
       url: '{{ .Env.GITLAB_BASE_URL }}'
       private_token: '{{ .Env.ACCESS_TOKEN_GITLAB }}'
-    repos:
-      - /^pairing_.*/
